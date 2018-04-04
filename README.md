@@ -9,7 +9,8 @@ The module defines functions new-config, save-config and get-config to manage th
 
 ###Getting started
 Create a mimecast account to be used for API access.  See steps 1-5 of https://community.mimecast.com/docs/DOC-2144
-Load the module
+Load the module.
+
 ```import-module <path to module>\PSMimecast.psm1```
 
 Create a config file, entering the email address and the password of the mimecast user account created in step 1 when prompted for a credential.
@@ -61,5 +62,5 @@ if (($null -eq ($settings['APIKeyExpiry'] -as [Datetime])) -or
  
 }
 ConvertTo-EncryptedApiKey -Settings $settings -Verbose 
-Save-Config -settings $settings -Verbose -path C:\scripts\mimecast\PSMimecast\PSMimecast.xml
+Save-Config -settings $settings -Verbose -path C:\mimecast\PSMimecast\PSMimecast.xml
 ```
