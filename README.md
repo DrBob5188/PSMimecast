@@ -2,7 +2,7 @@
 ### Warning
 This module isn't finished or properly tested. Things like proxy support have been coded but not tested. Logging is not implemented, only verbose messages are implemented at this stage. Nevertheles you may find it useful as a starting point. The module was intended to support internationalisation, but only the verbose messages have been coded in this fashion.
 
-###What does it do?
+### What does it do?
 The module is just just a Powershell wrapper for the Mimecast API.  Not all the API endpoints have been coded but the Invoke-MimecastApi function takes care of most of the complexity of calling the mimecast API. If you need one of the uncoded api endpoints, take a look at the Mimecast developer doco and make the call with Invoke-MimecastApi.
 
 The module defines functions new-config, save-config and get-config to manage the configuration file and settings.  The sensitive information such as user login password and api keys are encrypted using an AES 256 key.  The AES key  is encrypted using an RSA 2048 bit key before being saved to the config file.  The generation of the RSA and AES keys is done in the New-Config  function.  No crypto knowledge is required.
