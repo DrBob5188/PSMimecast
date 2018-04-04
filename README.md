@@ -7,7 +7,7 @@ The module is just a Powershell wrapper for the Mimecast API.  Not all the API e
 
 The module defines functions new-config, save-config and get-config to manage the configuration file and settings.  The sensitive information such as user login password and api keys are encrypted using an AES 256 key.  The AES key  is encrypted using an RSA 2048 bit key before being saved to the config file.  The generation of the RSA and AES keys is done in the New-Config  function.  No crypto knowledge is required.
 
-###Getting started
+### Getting started
 Create a mimecast account to be used for API access.  See steps 1-5 of https://community.mimecast.com/docs/DOC-2144
 Load the module.
 
