@@ -5,16 +5,19 @@
 .DESCRIPTION
   Create and save a new PSMimecast configuration file.
 
-.PARAMETER path <String>
+.PARAMETER path
   The path to the config file.
 
-.PARAMETER credential <PSCredential>
+.PARAMETER credential
   A PSCredential object containing the username and password for Mimecast login. 
 
-.PARAMETER keyName <String>
-  The name of the container to be used to store the RSA key. 
+.PARAMETER keyName
+  The name of the container to be used to store the RSA key.
 
-.PARAMETER useMachineKeys <Switch>
+.PARAMETER KeySize
+  The size of the RSA key to create.
+
+.PARAMETER useMachineKeys
   Use machine key store for RSA key storage. Default is true. 
 
 .INPUTS
@@ -31,9 +34,8 @@
 
 .EXAMPLE
   New-Config -path "c:\mimecast\PSMimecast\PSMimecast.xml
-
+  Creates a new config file generating new RSA and AES keys automatically.
 #>
-
 function New-Config
 {
     [cmdletBinding()]
@@ -50,6 +52,7 @@ function New-Config
         [Switch]$useMachineKeys = $true
     )
 
+    Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState -Name 'VerbosePreference'
     Import-LocalizedData -BindingVariable vMsgs -FileName ("{0}.psd1" -f $MyInvocation.MyCommand)
    
     $settings = @{
@@ -65,6 +68,7 @@ function New-Config
         "LogDirectory" = ".\"
         "BaseUrl" = [String]::Empty
         "applicationId" = "f86a9db0-61be-487d-8d47-f5f3ade86d10"
+        "applicationKey" = "05a0ec94-0ca1-417e-b9c9-c3713e34e339"
         "Authtype" = [String]::Empty;
     }
 

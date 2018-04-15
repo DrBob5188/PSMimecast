@@ -5,12 +5,20 @@
 .DESCRIPTION
   Saves the mimecast configuration file.
 
-.PARAMETER path <String>
+.PARAMETER path
   The path to the config file.
 
-.PARAMETER settings <hashtable>
-  The key and value pairs to be persisted in the config file. 
+.PARAMETER settings
+  The key and value pairs to be persisted in the config file.
 
+.PARAMETER UnsafeKeys
+  The key names for key value pairs that should not be persisted to disk in
+  unencrypted format.  By default only the accessKey and secretKey are not
+  serialised to disk.
+
+.PARAMETER RemoveUnsafeKeys
+  Toggles whether unsafe keys are serialised to disk. Useful for debugging.
+  The default value is true.
 .INPUTS
   none
 
@@ -24,10 +32,10 @@
   Purpose/Change: Initial script development
 
 .EXAMPLE
-  Save-Config  -path "c:\mimecast\PSMimecast\PSMimecast.xml -settings
-
+  Save-Config  -path "c:\mimecast\PSMimecast\PSMimecast.xml -settings $settings
+  Saves the current settings hashtable into an xml format removing all the
+  unencrypted sensitive key value pairs.
 #>
-
 function Save-Config
 {
     [cmdletBinding()]
@@ -55,6 +63,7 @@ function Save-Config
         [switch]$RemoveUnsafeKeys=$true
     )
 
+    Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState -Name 'VerbosePreference'
     Import-LocalizedData -BindingVariable vMsgs -FileName ("{0}.psd1" -f $MyInvocation.MyCommand)
     $doc = New-Object System.Xml.XmlDocument
     $newChild = $doc.CreateElement("configuration")

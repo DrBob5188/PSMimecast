@@ -5,7 +5,7 @@
 .DESCRIPTION
   Reads the mimecast configuration file.
 
-.PARAMETER path <String>
+.PARAMETER path
   The path to the config file.
 
 .INPUTS
@@ -25,9 +25,9 @@
 
 .EXAMPLE
   get-config  -path "c:\mimecast\PSMimecast\PSMimecast.xml
-
+  Retrieves the xml serialised config into a settings hashtable suitable for
+  passing to other PSMimecast module functions.
 #>
-
 function get-Config
 {
     [cmdletBinding()]
@@ -36,8 +36,8 @@ function get-Config
         [ValidateScript({Test-Path $_})]
         [string]$path
     )            
-    Write-verbose ("PSScriptRoot: {0}" -f $PSScriptRoot)
-    Write-verbose ("PSScriptRoot: {0}" -f $PSScriptRoot)
+
+    Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState -Name 'VerbosePreference'
     Import-LocalizedData -BindingVariable vMsgs -FileName ("{0}.psd1" -f $MyInvocation.MyCommand)
     $appSettings = @{}
     $config = [xml](get-content $path)

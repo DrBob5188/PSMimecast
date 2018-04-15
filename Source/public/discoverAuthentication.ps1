@@ -37,7 +37,7 @@
     Headers = The http headers returned from the API call
   and either
     Output =  PSCustomObject returned calling ConvertFrom-JSON on the response body.
-  if the returned contenttype is application type is application/json or
+  if the returned contenttype is application/json or
     Response = the unconverted response body.
 
 
@@ -49,6 +49,7 @@
 
 .EXAMPLE
   discoverAuthentication  -email dodgyemail@dodgyemail.com.au
+  Returns the api host for the specified users region.
 
 #>
 
@@ -74,6 +75,7 @@ function DiscoverAuthentication
         [PSCredential]$ProxyCredential
     )            
 
+    Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState -Name 'VerbosePreference'
     Import-LocalizedData -BindingVariable vMsgs -FileName ("{0}.psd1" -f $MyInvocation.MyCommand)
     $RetValues = @{}  #Holds our return values.
     $RequestId = [guid]::NewGuid().guid
@@ -111,7 +113,7 @@ function DiscoverAuthentication
         write-verbose ($vMsgs.iwrHeaders -f $MyInvocation.MyCommand, $Header, $RequestHeaders[$Header])
     }
 
-    $Response = Invoke-WebRequest @requestParams -ErrorVariable iwrError -Verbose
+    $Response = Invoke-WebRequest @requestParams -ErrorVariable iwrError
     
     if ($iwrError.Count -ne 0)
     {

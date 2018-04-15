@@ -3,7 +3,8 @@
   Executes a mimecast API request.
 
 .DESCRIPTION
-  Executes a mimecast API request.
+  This function is a generic wrapper to execute a request against most of the
+  mimecast API endpoints.
 
 .PARAMETER Settings
   The settings hashtable created with either of the new-config or get-config
@@ -34,10 +35,8 @@
   A hashtable containing the following keys
     StatusCode = HTTP statuscode from the Invoke-WebRequest call.
     Headers = The http headers returned from the API call
-  and either
-    Output =  PSCustomObject returned calling ConvertFrom-JSON on the response body.
-  if the returned contenttype is application type is application/json or
-    Response = the unconverted response body.
+  and 
+    Content = the unconverted response body.
 
 .NOTES
   Version:        1.0
@@ -49,6 +48,8 @@
 
 .EXAMPLE
   invoke-MimecastAPI
+  Blah
+
 
 #>
 function Invoke-MimecastAPI
@@ -73,13 +74,14 @@ function Invoke-MimecastAPI
         [PSCredential]$ProxyCredential
     )            
     
-    $RetValues = @{}  #Holds our return values.
+    Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState -Name 'VerbosePreference'
     Import-LocalizedData -BindingVariable vMsgs -FileName ("{0}.psd1" -f $MyInvocation.MyCommand)
+    $RetValues = @{}  #Holds our return values.
 
     <#
         Mimecast requires a unique ID for each call.  It's used in the
         x-mc-req-id header. I assume that's to help prevent replay attacks.
-        You need the request if you want Mimecast to check their logs.
+        You need the request ID if you want Mimecast to check their logs.
         Ref - Authorization, https://community.mimecast.com/docs/DOC-1809
     #>
     $RequestId = [guid]::NewGuid().guid
@@ -114,22 +116,23 @@ function Invoke-MimecastAPI
     Write-Verbose ($vMsgs.signature -f $MyInvocation.MyCommand, $Signature)
  
     $RequestHeaders = @{
-                        "Authorization" = $Signature;
-                        "x-mc-app-id" = $Settings['applicationID'];
-                        "x-mc-req-id" = $RequestId;
-                        "x-mc-date" = $RequestDate;
-                        "Content-Type" = "application/json; charset=utf-8";
-                       }
+        "Authorization" = $Signature;
+        "x-mc-app-id" = $Settings['applicationID'];
+        "x-mc-req-id" = $RequestId;
+        "x-mc-date" = $RequestDate;
+        "Content-Type" = "application/json; charset=utf-8";
+    }
 
-    #Mimecast  APi is expecting UTF-8 encoding for everything.
+    #Mimecast  API is expecting UTF-8 encoding for everything.
     $PostBody = [System.Text.Encoding]::UTF8.GetBytes($Body)
     $iwrParams = @{
-                    "Method" = "Post";
-                    "Uri" = ("{0}{1}" -f $Settings['BaseUrl'],$uri);
-                    "Body" = $PostBody;
-                    "Headers" = $RequestHeaders;
-                    "ErrorAction" = "SilentlyContinue";
-                  }
+        "Method" = "Post";
+        "Uri" = ("{0}{1}" -f $Settings['BaseUrl'],$uri);
+        "Body" = $PostBody;
+        "Headers" = $RequestHeaders;
+        "ErrorAction" = "SilentlyContinue";
+        "UseBasicParsing" = $true;
+    }
     
     if (($Proxy -ne $null) -and ($Proxy -ne [String]::Empty))
     {
@@ -145,7 +148,7 @@ function Invoke-MimecastAPI
         write-verbose ($vMsgs.iwrHeaders -f $MyInvocation.MyCommand, $Header, $RequestHeaders[$Header])
     }
 
-    $Response = Invoke-WebRequest @iwrParams -ErrorVariable iwrError -UseBasicParsing
+    $Response = Invoke-WebRequest @iwrParams -ErrorVariable iwrError
 
     if ($iwrError.Count -ne 0)
     {
@@ -153,7 +156,7 @@ function Invoke-MimecastAPI
         if ($iwrError[0].ErrorRecord.exception -is [System.Net.WebException])
         {
             <# Get the body of the response, refer Notes [1] #>
-            [System.Net.HttpWebResponse]$Response = $iwrError.ErrorRecord.Exception.Response
+            $Response = $iwrError.ErrorRecord.Exception.Response
             $stream = $response.GetResponseStream()
             $SR = New-Object System.IO.StreamReader($stream)
             $SR.BaseStream.Position = 0
@@ -161,31 +164,15 @@ function Invoke-MimecastAPI
             $ErrResponse = $SR.ReadToEnd()
             $RetValues.add("Headers",$Response.Headers)
             $RetValues.add("StatusCode",$Response.StatusCode.value__)
-
             Write-Verbose ($vMsgs.exceptionStatus -f $MyInvocation.MyCommand, $RetValues.StatusCode)
             Write-Verbose ($vMsgs.exceptionContent -f $MyInvocation.MyCommand, $ErrResponse)
-            if ($Response.headers["Content-Type"] -eq "application/json")
-            {
-                $RetValues.add("Output", (ConvertFrom-Json  $ErrResponse))
-            }
-            else
-            {
-                $RetValues.add("Response", $ErrResponse)
-            }
         }
     }
     else
     {
         Write-Verbose ($vMsgs.iwrStatus -f $MyInvocation.MyCommand, $Response.StatusCode)
         Write-Verbose ($vMsgs.iwrContent -f $MyInvocation.MyCommand, $Response.Content)
-        if ($Response.headers["Content-Type"] -eq "application/json")
-        {
-            $RetValues.add("Output", (ConvertFrom-Json  $Response.content))
-        }
-        else
-        {
-            $RetValues.add("Response", $Response.Content)
-        }
+        $RetValues.add("Content", $Response.Content)
         $RetValues.add("StatusCode",$response.StatusCode)
         $RetValues.add("Headers",$Response.Headers)
     }

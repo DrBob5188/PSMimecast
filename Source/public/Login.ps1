@@ -48,10 +48,14 @@
     [1] How to get Powershell Invoke-Restmethod to return body of http 500 code response. (2013, September 12). Retrieved December 18, 2016, from http://stackoverflow.com/questions/18771424/how-to-get-powershell-invoke-restmethod-to-return-body-of-http-500-code-response
 
 .EXAMPLE
-  discoverAuthentication  -email dodgyemail@dodgyemail.com.au
+  login -settings $settings
+  Logs in to the mimecast api endpoint using the configured username and
+  password credential in the settings hashtable.  The credentials are initially
+  created using the new-config function.
 
+.LINK
+  new-config
 #>
-
 function Login
 {
     [cmdletBinding(DefaultParameterSetName="All")]
@@ -71,6 +75,7 @@ function Login
         [PSCredential]$ProxyCredential
     )            
 
+    Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState -Name 'VerbosePreference'
     Import-LocalizedData -BindingVariable vMsgs -FileName ("{0}.psd1" -f $MyInvocation.MyCommand)
     $RetValues = @{}  #Holds our return values.
 
@@ -129,7 +134,7 @@ function Login
         write-verbose ($vMsgs.iwrHeaders -f $MyInvocation.MyCommand, $Header, $RequestHeaders[$Header] )
     }
 
-    $Response = Invoke-WebRequest @requestParams -ErrorVariable iwrError -Verbose
+    $Response = Invoke-WebRequest @requestParams -ErrorVariable iwrError
     
     if ($iwrError.Count -ne 0)
     {

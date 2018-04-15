@@ -1,5 +1,6 @@
 ﻿<#
 .SYNOPSIS
+
   Decrypts the API Keys.
 
 .DESCRIPTION
@@ -7,7 +8,7 @@
   and decrypts the API keys using that key.
   The settings hashtable is updated with the decrypted api keys.
 
-.PARAMETER Settings <HashTable>
+.PARAMETER Settings
   A hashtable of configuration settings obtained from a call to Loadconfig file.
 
 .INPUTS
@@ -23,11 +24,11 @@
   Purpose/Change: Initial script development
 
 .EXAMPLE
-  ConvertFrom-EncryptedApiKey  -settings $Settings -AccessApiKey "YourAccessKey" -SecretApiKey "Your secret key"
-
+  ConvertFrom-EncryptedApiKey  -settings $Settings
+  Converts the encrypted accessKey and encrypted secretKey parameters in the settings hashtable
+  to their decrypted format suitable for use by the Invoke-MimecastApi function.
+  function.
 #>
-
-
 function ConvertFrom-EncryptedApiKey
 {
     [cmdletBinding()]
@@ -36,6 +37,7 @@ function ConvertFrom-EncryptedApiKey
         [HashTable]$Settings
     )
 
+    Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState -Name 'VerbosePreference'
     Import-LocalizedData -BindingVariable vMsgs -FileName ("{0}.psd1" -f $MyInvocation.MyCommand)
 
     #Validate Mandatory Settings are present
@@ -51,6 +53,7 @@ function ConvertFrom-EncryptedApiKey
     try
     {
         $ApiKeys = @{}
+        Write-Verbose ($vMsgs.initCSP -f $MyInvocation.MyCommand)
         $csp = New-Object System.Security.Cryptography.CspParameters
         if ($Settings['UseMachineKeys'] -eq $true)
         {
@@ -58,8 +61,11 @@ function ConvertFrom-EncryptedApiKey
         }
         $csp.Flags = $csp.Flags -bor [System.Security.Cryptography.CspProviderFlags]::UseExistingKey;
         $csp.KeyContainerName = $Settings['KeyContainerName']
+        Write-Verbose ($vMsgs.rsaProvider -f $MyInvocation.MyCommand)
         $rsap = New-Object System.Security.Cryptography.RSACryptoServiceProvider -ArgumentList ($csp)
+        Write-Verbose ($vMsgs.decryptAES -f $MyInvocation.MyCommand)
         $AesKey = $rsap.Decrypt([System.Convert]::FromBase64String($settings['Encrypted-PasswordEncryptionKey']),$true)
+        Write-Verbose ($vMsgs.decryptAPIKeys -f $MyInvocation.MyCommand)
         $ApiKeys['accessKey'] = ConvertTo-SecureString -String $Settings['Encrypted-AccessKey'] -Key $AesKey
         $ApiKeys['secretKey'] = ConvertTo-SecureString -String $Settings['Encrypted-SecretKey'] -Key $AesKey
         $cred = New-object System.Management.Automation.PSCredential ("Placeholder",$ApiKeys['secretKey'])

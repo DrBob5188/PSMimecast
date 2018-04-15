@@ -48,10 +48,11 @@
     [1] How to get Powershell Invoke-Restmethod to return body of http 500 code response. (2013, September 12). Retrieved December 18, 2016, from http://stackoverflow.com/questions/18771424/how-to-get-powershell-invoke-restmethod-to-return-body-of-http-500-code-response
 
 .EXAMPLE
-  discoverAuthentication  -email dodgyemail@dodgyemail.com.au
-
+  Logout -settings $settings
+  Invalidates the existing accessKey and secretKey. The accessKey, secretKey,
+  EncryptedAccessKey and EncryptedSecretKey key value pairs are removed from
+  the settings hashtable.
 #>
-
 function Logout
 {
     [cmdletBinding(DefaultParameterSetName="All")]
@@ -71,6 +72,7 @@ function Logout
         [PSCredential]$ProxyCredential
     )            
 
+    Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState -Name 'VerbosePreference'
     Import-LocalizedData -BindingVariable vMsgs -FileName ("{0}.psd1" -f $MyInvocation.MyCommand)
     $PostBody = @{"data" = ,@{"accessKey" = $Settings['accessKey']}}
     $PostBodyJson = ConvertTo-Json $PostBody

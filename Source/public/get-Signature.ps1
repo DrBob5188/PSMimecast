@@ -10,10 +10,10 @@
   This function computes the HMACSHA1 hash and returns it as
   a base64 encoded string.
 
-.PARAMETER message <String>
+.PARAMETER message
   The data to be hashed.
 
-.PARAMETER key <String>
+.PARAMETER key
   The key to be used in the keyed-hashing function. 
 
 .INPUTS
@@ -30,9 +30,9 @@
 
 .EXAMPLE
   get-Signature  -message "Message to Hash" -key "secretkey"
+  Returns the base64 encoded hmac-sha1 value for the given input message and key.
 
 #>
-
 function Get-Signature
 {
     [cmdletBinding()]
@@ -43,6 +43,7 @@ function Get-Signature
         [String]$key
     )            
 
+    Get-CallerPreference -Cmdlet $PSCmdlet -SessionState $ExecutionContext.SessionState -Name 'VerbosePreference'
     Import-LocalizedData -BindingVariable vMsgs -FileName ("{0}.psd1" -f $MyInvocation.MyCommand)
     Write-Verbose ($vMsgs.messageContent -f $MyInvocation.MyCommand, $message)
     write-verbose ($vMsgs.b64Key -f $MyInvocation.MyCommand, $key)
